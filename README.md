@@ -3,7 +3,7 @@
 Say goodbye to the likes of dig, ping and traceroute with more accessible,
 more informative and prettier output.
 
-<!-- insert carbon screenshot here -->
+![image](https://user-images.githubusercontent.com/44979306/143790954-c058f58b-0941-4b2d-b3ff-057916cf487f.png)
 
 Spade is fully operational on all major operating systems, this includes Windows, Linux and MacOS.
 
