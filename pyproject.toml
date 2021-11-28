@@ -15,6 +15,9 @@ typer = { extras = ["all"], version = "^0.4.0"}
 rich = "^10.14"
 dnspython = "^2.1"
 pydantic = "^1.8"
+Sphinx = "^4.3.1"
+myst-parser = "^0.15.2"
+sphinx-rtd-theme = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
