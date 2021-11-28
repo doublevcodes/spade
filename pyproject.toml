@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "spade"
+version = "0.1.0"
+description = "You can't dig without a spade! - a super-powered networking tool!"
+authors = ["Vivaan Verma <hello@vivaanverma.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.scripts]
+spade = "spade.cli:spade"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+typer = { extras = ["all"], version = "^0.4.0"}
+rich = "^10.14"
+dnspython = "^2.1"
+pydantic = "^1.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
