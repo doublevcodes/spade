@@ -86,15 +86,7 @@ def dig(
         tcp=tcp,
     )
 
-    styled_record_type: str = typer.style(lookup.rdtype._name_, fg=typer.colors.BLUE)
-    styled_hostname: str = typer.style(
-        b".".join(lookup.qname.labels).decode("utf-8"), fg=typer.colors.GREEN
-    )
-    styled_nameserver: str = typer.style(
-        f"{lookup.nameserver}:{lookup.port}", fg=typer.colors.RED
-    )
-    output = f"\nDNS Lookup for {styled_record_type} records for {styled_hostname} through {styled_nameserver}:\n"
-
+    # If the user requested zone file output, we will output the result in the zone file format.
     if zone_file:
         rrset: list[str] = lookup.rrset.to_text()
         hostname_repr: str = b".".join(lookup.qname.labels).decode("utf-8")
@@ -120,6 +112,18 @@ def dig(
         typer.echo(output)
 
     if not zone_file:
+        styled_record_type: str = typer.style(
+            lookup.rdtype._name_, fg=typer.colors.BLUE
+        )
+        styled_hostname: str = typer.style(
+            b".".join(lookup.qname.labels).decode("utf-8"), fg=typer.colors.GREEN
+        )
+        styled_nameserver: str = typer.style(
+            f"{lookup.nameserver}:{lookup.port}", fg=typer.colors.RED
+        )
+
+        output = f"\nDNS Lookup for {styled_record_type} records for {styled_hostname} through {styled_nameserver}:\n"
+
         records: list[str] = lookup.rrset.to_text().split("\n")
         styled_records: list[str] = []
 
@@ -135,7 +139,8 @@ def dig(
             )
 
         output += "\n".join(styled_records)
+
         time_taken = f"{time_taken * 1000:.3f}ms"
         output += f"\n\nQuery time: {time_taken}\n"
 
-        typer.secho(output)
+        typer.echo(output)
