@@ -22,7 +22,7 @@ def _version_callback(value: bool):
 
 
 @spade.callback()
-def main(
+def version(
     version: Optional[bool] = typer.Option(
         None,
         "--version",
