@@ -2,7 +2,8 @@ from typing import Optional
 
 import typer
 
-from spade import __app_name__, __version__, dig
+from spade import __app_name__, __version__
+from spade.commands import dig
 
 
 class Spade(typer.Typer):
