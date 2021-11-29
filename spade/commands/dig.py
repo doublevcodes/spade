@@ -15,8 +15,31 @@ def dns_lookup(
     nameserver_port: int = 53,
     tcp: bool = False,
 ) -> tuple[Answer, float]:
-    """
-    Lookup a DNS record.
+    """Queries a DNS record.
+
+    Resolves DNS records for the given host name by querying the provided DNS
+    nameserver if one is provided, else using Cloudflare's 1.1.1.1 for speed.
+
+    Args:
+        target: The hostname to perform the DNS query on.
+        record_type: The type of DNS record to query for.
+        nameserver: The location the query should be sent to.
+        nameserver_port: The port of the provided nameserver which the DNS
+          query should be sent to.
+        tcp: Whether to use the TCP protocol for the query instead of UDP
+          which is used by standard in most DNS resolvers.
+
+    Returns:
+        A tuple containing the DNS response and the time it took to execute
+        the query.
+
+    Raises:
+        AttributeError: The record type provided was not valid.
+        dns.resolver.NXDOMAIN: The hostname provided does not exist.
+        dns.resolver.YXDOMAIN: The hostname exists but is not authoritative.
+        dns.resolver.NoAnswer: The provided hostname has no records of the
+          specified type.
+        dns.resolver.NoNameservers: The nameserver had an internal error.
     """
 
     resolver: Resolver = Resolver()
