@@ -69,12 +69,16 @@ def dig(
     nameserver: str = typer.Argument(
         "1.1.1.1", help="The nameserver to send the request to"
     ),
-    nameserver_port: int = typer.Option(53, help="The port to send the request to"),
-    tcp: bool = typer.Option(False, help="Use TCP instead of UDP"),
-    zone_file: bool = typer.Option(False, help="Output the result in zone file format"),
+    nameserver_port: int = typer.Option(
+        53, "-p", "--port", help="The port to send the request to"
+    ),
+    tcp: bool = typer.Option(False, "--tcp", help="Use TCP instead of UDP"),
+    zone_file: bool = typer.Option(
+        False, "-z", "--zone-file", help="Output the result in zone file format"
+    ),
 ) -> None:
     """
-    Exposes a CLI interface to the internal dig function.
+    Run a DNS lookup.
     """
 
     # Perform a DNS query and get the result and the time taken to perform the query.

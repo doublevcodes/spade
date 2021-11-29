@@ -1,9 +1,10 @@
+import importlib
+from pathlib import Path
 from typing import Optional
 
 import typer
 
 from spade import __app_name__, __version__
-from spade.commands import dig
 
 
 class Spade(typer.Typer):
@@ -34,7 +35,11 @@ def main(
     return
 
 
-spade.command()(dig.dig)
+for command_file in (Path(__file__).parent / "commands").glob("*.py"):
+    command_name = command_file.stem
+    command_module = importlib.import_module(f"spade.commands.{command_name}")
+    command_function = getattr(command_module, command_name)
+    spade.command()(command_function)
 
 if __name__ == "__main__":
     spade(prog_name=__app_name__)
