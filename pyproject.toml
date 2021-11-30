@@ -1,10 +1,13 @@
 [tool.poetry]
 name = "spade-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "You can't dig without a spade! - a super-powered networking tool!"
 authors = ["Vivaan Verma <hello@vivaanverma.com>"]
 license = "MIT"
 readme = "README.md"
+packages = {
+    include = "spade"
+}
 
 [tool.poetry.scripts]
 spade = "spade.cli:spade"
