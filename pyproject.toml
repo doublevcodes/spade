@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "spade"
+name = "spade-cli"
 version = "0.1.0"
 description = "You can't dig without a spade! - a super-powered networking tool!"
 authors = ["Vivaan Verma <hello@vivaanverma.com>"]
