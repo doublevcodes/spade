@@ -14,5 +14,11 @@ def test_dns_lookup():
 
 
 def test_dns_lookup_invalid_record_type():
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match="Invalid record type"):
         CliRunner().invoke(cli.spade, ["dig", "example.com", "BAD"])
+
+
+def test_dns_lookup_nxdomain():
+    invalid = "foo.invalid"
+    with pytest.raises(Exception, match=f"{invalid} does not exist"):
+        CliRunner().invoke(cli.spade, ["dig", invalid])
