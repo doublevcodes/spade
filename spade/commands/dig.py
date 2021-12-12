@@ -87,7 +87,7 @@ def dns_lookup(
 
 
 def dig(
-    name: str = typer.Argument(..., help="The name to perform a DNS lookup on"),
+    target: str = typer.Argument(..., help="The name to perform a DNS lookup on"),
     record_type: str = typer.Argument("A", help="The record type to request"),
     nameserver: str = typer.Argument(
         "1.1.1.1", help="The nameserver to send the request to"
@@ -106,7 +106,7 @@ def dig(
 
     # Perform a DNS query and get the result and the time taken to perform the query.
     lookup, time_taken = dns_lookup(
-        target=name,
+        target=target,
         record_type=record_type,
         nameserver=nameserver,
         nameserver_port=nameserver_port,
@@ -155,8 +155,8 @@ def dig(
         styled_records: list[str] = []
 
         for record in records:
-            name, ttl, rclass, rtype, *rdata = record.split(" ")
-            styled_hostname: str = typer.style(name, fg=typer.colors.GREEN)
+            target, ttl, rclass, rtype, *rdata = record.split(" ")
+            styled_hostname: str = typer.style(target, fg=typer.colors.GREEN)
             styled_ttl: str = typer.style(ttl, fg=typer.colors.RESET)
             styled_rclass: str = typer.style(rclass, fg=typer.colors.RESET)
             styled_rtype: str = typer.style(rtype, fg=typer.colors.BLUE)
