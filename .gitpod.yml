@@ -1,0 +1,7 @@
+tasks:
+  - init: |
+      python3 -m pip install poetry
+      poetry install
+      poetry shell
+    command: |
+      spade --version
