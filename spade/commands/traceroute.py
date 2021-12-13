@@ -3,8 +3,11 @@ import socket
 import struct
 import sys
 
-TRACEROUTE_PORT: Final[int] = 33434
+import typer
 
+TRACEROUTE_PORT: Final[int] = 33434
+TRACEROUTE_PACKET_TTL: Final[int] = 1
+RECEIVE_CHUNK_SIZE: Final[int] = 512
 
 def traceroute_lookup(target: str, hops: int = 99) -> Generator[str, None, None]:
     """
@@ -15,20 +18,20 @@ def traceroute_lookup(target: str, hops: int = 99) -> Generator[str, None, None]
     Returns:
 
     """
+
     dest_addr: str = socket.gethostbyname(target)
-    port = TRACEROUTE_PORT
-    ttl = 1
+    
     while True:
         rec_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
         send_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        send_socket.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
+        send_socket.setsockopt(socket.SOL_IP, socket.IP_TTL, TRACEROUTE_PACKET_TTL)
 
         timeout = struct.pack("ll", 5, 0)
         rec_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO, timeout)
 
-        rec_socket.bind(("", port))
+        rec_socket.bind(("", TRACEROUTE_PORT))
         sys.stdout.write(" %d   " % ttl)
-        send_socket.sendto(bytes("", "utf-8"), (target, port))
+        send_socket.sendto(bytes("", "utf-8"), (target, TRACEROUTE_PORT))
 
         curr_addr = None
         curr_name = None
@@ -36,7 +39,7 @@ def traceroute_lookup(target: str, hops: int = 99) -> Generator[str, None, None]
         tries = 3
         while not finished and tries > 0:
             try:
-                _, curr_addr = rec_socket.recvfrom(512)
+                _, curr_addr = rec_socket.recvfrom(RECEIVE_CHUNK_SIZE)
                 finished = True
                 curr_addr = curr_addr[0]
                 try:
@@ -63,5 +66,5 @@ def traceroute_lookup(target: str, hops: int = 99) -> Generator[str, None, None]
         if curr_addr == dest_addr or ttl > hops:
             break
 
-if __name__ == "__main__":
-    traceroute_lookup("bad.horse")
+def traceroute():
+    pass
