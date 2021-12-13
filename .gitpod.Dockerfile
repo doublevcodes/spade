@@ -1,3 +1,5 @@
+FROM gitpod/workspace-base
+
 USER gitpod
 RUN sudo install-packages python3-pip
 
