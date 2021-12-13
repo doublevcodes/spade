@@ -3,3 +3,9 @@ image:
 
 tasks:
   - before: poetry install
+
+vscode:
+  extensions:
+    - ms-python.python
+    - tamasfe.even-better-toml
+    - entepe85.gitlens
