@@ -15,5 +15,5 @@ RUN curl -fsSL https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-ins
     && python3 -m pip install --no-cache-dir --upgrade poetry \
     && sudo rm -rf /tmp/*USER gitpod
 ENV PYTHONUSERBASE=/workspace/.pip-modules \
-    PIP_USER=yes
+    PIP_USER=FALSE
 ENV PATH=$PYTHONUSERBASE/bin:$PATH
