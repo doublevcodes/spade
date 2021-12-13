@@ -1,8 +1,2 @@
-tasks:
-  - init: |
-      pyenv install 3.10.1
-      pyenv local 3.10.1
-      python3 -m pip install poetry
-      python3 -m poetry install
-    command: |
-      poetry shell
+image:
+  file: .gitpod.Dockerfile
