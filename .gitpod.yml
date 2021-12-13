@@ -3,4 +3,3 @@ image:
 
 tasks:
   - before: poetry install
-  - command: poetry shell
