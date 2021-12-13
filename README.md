@@ -16,3 +16,5 @@ information, check out [the manual](https://example.com/).
 If something isn't quite right, or something could be even better, we'd love for you to let us know.
 Then, either you or somebody else from our community can try and fix it. If you'd like to get started
 with developing Spade CLI check out our [contributing guide](https://github.com/doublevcodes/spade/blob/main/CONTRIBUTING.md).
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/doublevcodes/spade)
