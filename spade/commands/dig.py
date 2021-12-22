@@ -7,6 +7,8 @@ from dns import flags, name, opcode
 from dns.resolver import NXDOMAIN, YXDOMAIN, Answer, NoAnswer, NoNameservers, Resolver
 from spade import __app_name__, __version__
 
+from spade.error.dig import InvalidRecordType, TargetNonExistent, RecordNonExistent
+
 
 def dns_lookup(
     target: str,
@@ -59,7 +61,7 @@ def dns_lookup(
         record_type_enum: int = getattr(RecordType, record_type)
     except AttributeError:
         # Reaching this part of the code means that the user entered an invalid DNS record type.
-        raise ValueError(f"Invalid record type: {record_type}")
+        InvalidRecordType(record_type).raise_cli()
 
     try:
         current_time = time.perf_counter()
@@ -76,11 +78,11 @@ def dns_lookup(
 
     # Multiple exceptions can be raised by the resolver, where each exception explains what went wrong.
     except NXDOMAIN:
-        raise Exception(f"{hostname} does not exist")
+        TargetNonExistent(hostname).raise_cli()
     except YXDOMAIN:
         raise Exception(f"{hostname} exists but is not authoritative")
     except NoAnswer:
-        raise Exception(f"{hostname} has no {record_type} record")
+        RecordNonExistent(hostname, record_type).raise_cli()
     except NoNameservers:
         raise Exception(f"No nameservers available")
     return result, time_taken
