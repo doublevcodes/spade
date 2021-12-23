@@ -1,70 +1,130 @@
-from typing import Generator, Final
-import socket
-import struct
-import sys
+from time import sleep
+from socket import gethostbyaddr
+from icmplib.utils import resolve, unique_identifier
+from icmplib.sockets import ICMPv4Socket, ICMPv6Socket
+from icmplib.models import ICMPRequest, TimeExceeded, Hop
+from icmplib.exceptions import ICMPLibError
+from rich.text import Text
+from rich.table import Table
+from rich.live import Live
+from ipwhois.net import Net
+from ipwhois.asn import IPASN
+from re import match
 
-import typer
+def traceroute_mine(address, count=1, interval=0.0, timeout=25, first_hop=1,
+        max_hops=30, id=None, source=None, family=None,
+        **kwargs):
+    if match(r'(?i)^([a-z0-9-]+|([a-z0-9_-]+[.])+[a-z]+)$', address) is not None:
+        address = resolve(address, family)[0]
 
-TRACEROUTE_PORT: Final[int] = 33434
-TRACEROUTE_PACKET_TTL: Final[int] = 1
-RECEIVE_CHUNK_SIZE: Final[int] = 512
+    if ":" in address:
+        _Socket = ICMPv6Socket
+    else:
+        _Socket = ICMPv4Socket
 
-def traceroute_lookup(target: str, hops: int = 99) -> Generator[str, None, None]:
-    """
-    Args:
-        target: The hostname/IP address to trace the route of packets to
-        hops: The maximum number of hops the packet is allowed to take
+    id = id or unique_identifier()
+    ttl = first_hop
+    host_reached = False
 
-    Returns:
+    with _Socket(source) as sock:
+        while not host_reached and ttl <= max_hops:
+            reply = None
+            packets_sent = 0
+            rtts = []
 
-    """
+            for sequence in range(count):
+                request = ICMPRequest(
+                    destination=address,
+                    id=id,
+                    sequence=sequence,
+                    ttl=ttl,
+                    **kwargs)
 
-    dest_addr: str = socket.gethostbyname(target)
-    
-    while True:
-        rec_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
-        send_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        send_socket.setsockopt(socket.SOL_IP, socket.IP_TTL, TRACEROUTE_PACKET_TTL)
-
-        timeout = struct.pack("ll", 5, 0)
-        rec_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO, timeout)
-
-        rec_socket.bind(("", TRACEROUTE_PORT))
-        sys.stdout.write(" %d   " % ttl)
-        send_socket.sendto(bytes("", "utf-8"), (target, TRACEROUTE_PORT))
-
-        curr_addr = None
-        curr_name = None
-        finished = False
-        tries = 3
-        while not finished and tries > 0:
-            try:
-                _, curr_addr = rec_socket.recvfrom(RECEIVE_CHUNK_SIZE)
-                finished = True
-                curr_addr = curr_addr[0]
                 try:
-                    curr_name = socket.gethostbyaddr(curr_addr)[0]
-                except socket.error:
-                    curr_name = curr_addr
-            except socket.error as err:
-                tries -= 1
-                sys.stdout.write("* ")
+                    sock.send(request)
+                    packets_sent += 1
 
-        send_socket.close()
-        rec_socket.close()
+                    reply = sock.receive(request, timeout)
+                    rtt = (reply.time - request.time) * 1000
+                    rtts.append(rtt)
 
-        if not finished:
-            pass
+                    reply.raise_for_status()
+                    host_reached = True
 
-        if curr_addr is not None:
-            curr_host = "%s (%s)" % (curr_name, curr_addr)
-        else:
-            curr_host = ""
-        print("%s\n" % (curr_host))
+                except TimeExceeded:
+                    sleep(interval)
 
-        ttl += 1
-        if curr_addr == dest_addr or ttl > hops:
-            break
+                except ICMPLibError:
+                    break
+            if reply:
+                hop = Hop(
+                    address=reply.source,
+                    packets_sent=packets_sent,
+                    rtts=rtts,
+                    distance=ttl)
+                yield hop
+            else:
+                yield None
+            ttl += 1
 
-def traceroute():
-    pass
+
+def trace(host):
+    hops = traceroute_mine(host)
+
+    table = Table(title=f"Traceroute to {host}")
+    table.add_column("Hop", justify="left")
+    table.add_column("Hostname", justify="left")
+    table.add_column("Address", justify="left")
+    table.add_column("Packets sent", justify="left")
+    table.add_column("Packets lost (%)", justify="left")
+    table.add_column("Average RTT (ms)", justify="left")
+    table.add_column("Minimum RTT (ms)", justify="left")
+    table.add_column("Maximum RTT (ms)", justify="left")
+    table.add_column("ASN", justify="left")
+    table.add_column("ASN Info", justify="left")
+    ld = 0
+    with Live(table):
+        for hop in hops:
+            if hop is None:
+                table.add_row(
+                    Text("(no response)", style="red"),
+                    Text("*", style="red"),
+                    Text("*", style="red"),
+                    Text("*", style="red"),
+                    Text("*", style="red"),
+                    Text("*", style="red"),
+                    Text("*", style="red"),
+                    Text("*", style="red"),
+                )
+                continue
+            try:
+                hostname = gethostbyaddr(hop.address)[0]
+            except Exception:
+                hostname = hop.address
+
+            try:
+                net_ip = Net(hop.address)
+                asn_obj = IPASN(net_ip)
+                asn = asn_obj.lookup().get('asn', "Error")
+            except Exception:
+                asn = "err"
+
+            table.add_row(
+                Text(str(hop.distance), style="green"),
+                Text(str(hostname), style="blue"),
+                str(hop.address),
+                str(hop.packets_sent),
+                str(hop.packet_loss * 100),
+                str(hop.avg_rtt),
+                str(hop.max_rtt),
+                str(hop.min_rtt),
+                asn,
+                f"https://bgp.tools/as/{asn}"
+            )
+            ld = hop.distance
+
+def traceroute(host):
+    """
+    Perform a traceroute to a host.
+    """
+    trace(host)
