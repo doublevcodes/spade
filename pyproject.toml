@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spade-cli"
-version = "0.2.2"
+version = "0.2.3"
 description = "You can't dig without a spade! - a super-powered networking tool!"
 authors = ["Vivaan Verma <hello@vivaanverma.com>"]
 license = "MIT"
@@ -18,14 +18,12 @@ typer = { extras = ["all"], version = "^0.4.0"}
 rich = "^10.14"
 dnspython = "^2.0"
 pydantic = "^1.8"
-prompt-toolkit = "^3.0.24"
 icmplib = "^3.0.2"
 ipwhois = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
 pytest-cov = "^3.0.0"
-mypy = "^0.930"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
