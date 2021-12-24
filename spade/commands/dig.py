@@ -1,4 +1,4 @@
-import textwrap
+from pathlib import Path
 import time
 
 import dns.rdatatype as RecordType
@@ -101,9 +101,13 @@ def dig(
     zone_file: bool = typer.Option(
         False, "-z", "--zone-file", help="Output the result in zone file format"
     ),
+    short: bool = typer.Option(False, "+short", help="Output only the relevant information"),
 ) -> None:
     """
     Run a DNS lookup.
+
+    Resolves DNS records for the given host name by querying the provided DNS
+    nameserver if one is provided, else using Cloudflare's 1.1.1.1 for speed.
     """
 
     # Perform a DNS query and get the result and the time taken to perform the query.
@@ -115,6 +119,8 @@ def dig(
         tcp=tcp,
     )
 
+    records: list[str] = lookup.rrset.to_text().split("\n")
+
     # If the user requested zone file output, we will output the result in the zone file format.
     if zone_file:
         rrset: list[str] = lookup.rrset.to_text()
@@ -123,24 +129,28 @@ def dig(
         id_: str = str(lookup.response.id)
         flags_repr: str = flags.to_text(lookup.response.flags)
 
-        output = textwrap.dedent(
-            f"""
-; <<>> Spade {__version__} <<>> {hostname_repr} 
-;; Got answer:
-;; ->>HEADER<<- opcode: {opcode_repr}, status: NOERROR, id: {id_}
-;; flags: {flags_repr};
-
-;; ANSWER SECTION:
-{rrset}
-
-;; Query time: {time_taken * 1000:.3f} msec
-;; SERVER: {lookup.nameserver}:{lookup.port}
-;; WHEN: {time.strftime("%H:%M:%S %a %d %b %Y %Z")}
-"""
+        with open(Path(__file__).parent.parent / "templates/dig/zone_file.txt", "r") as zone_file_template:
+            zone_file_template_content = zone_file_template.read()
+        
+        output = zone_file_template_content.format(
+            __version__=__version__,
+            hostname_repr=hostname_repr,
+            rrset=rrset,
+            opcode_repr=opcode_repr,
+            id_=id_,
+            flags=flags_repr,
+            ns=nameserver,
+            port=nameserver_port,
+            time_taken=time_taken,
+            timestamp=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         )
         typer.echo(output)
 
-    if not zone_file:
+    elif short:
+        out = "\n".join(record.split()[-1] for record in records)
+        typer.echo(out)
+
+    else:
         styled_record_type: str = typer.style(
             lookup.rdtype._name_, fg=typer.colors.BLUE
         )
@@ -153,7 +163,7 @@ def dig(
 
         output = f"\nDNS Lookup for {styled_record_type} records for {styled_hostname} through {styled_nameserver}:\n"
 
-        records: list[str] = lookup.rrset.to_text().split("\n")
+        
         styled_records: list[str] = []
 
         for record in records:

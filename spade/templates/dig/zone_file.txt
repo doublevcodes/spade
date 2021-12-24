@@ -1,0 +1,12 @@
+; <<>> Spade {__version__} <<>> {hostname_repr}
+;; Got answer:
+;; ->>HEADER<<- opcode: {opcode_repr}, status: NOERROR, id: {id_}
+;; flags: {flags};
+
+;; ANSWER SECTION:
+{rrset}
+
+;; Query time: {time_taken} msec
+;; SERVER: {ns}:{port}
+;; WHEN: {timestamp}
+"""

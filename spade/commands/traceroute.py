@@ -3,13 +3,16 @@ from socket import gethostbyaddr
 from icmplib.utils import resolve, unique_identifier
 from icmplib.sockets import ICMPv4Socket, ICMPv6Socket
 from icmplib.models import ICMPRequest, TimeExceeded, Hop
-from icmplib.exceptions import ICMPLibError
+from icmplib.exceptions import ICMPLibError, SocketPermissionError as SPE
 from rich.text import Text
 from rich.table import Table
 from rich.live import Live
 from ipwhois.net import Net
 from ipwhois.asn import IPASN
 from re import match
+import typer
+
+from spade.error.traceroute import SocketPermissionError
 
 def traceroute_mine(address, count=1, interval=0.0, timeout=25, first_hop=1,
         max_hops=30, id=None, source=None, family=None,
@@ -26,6 +29,10 @@ def traceroute_mine(address, count=1, interval=0.0, timeout=25, first_hop=1,
     ttl = first_hop
     host_reached = False
 
+    try:
+        _ = _Socket(source)
+    except SPE:
+        SocketPermissionError().raise_cli()
     with _Socket(source) as sock:
         while not host_reached and ttl <= max_hops:
             reply = None
@@ -82,7 +89,6 @@ def trace(host):
     table.add_column("Maximum RTT (ms)", justify="left")
     table.add_column("ASN", justify="left")
     table.add_column("ASN Info", justify="left")
-    ld = 0
     with Live(table):
         for hop in hops:
             if hop is None:
@@ -121,7 +127,6 @@ def trace(host):
                 asn,
                 f"https://bgp.tools/as/{asn}"
             )
-            ld = hop.distance
 
 def traceroute(host):
     """
